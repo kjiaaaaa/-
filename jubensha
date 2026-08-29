@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剧本杀 · 援助金疑案</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #f4f6f9;
+            color: #2b303a;
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            line-height: 1.7;
+        }
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 1000;
+            background: #ffffff;
+            border: 1px solid #dcdfe6;
+            color: #2b303a;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            line-height: 1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .menu-toggle:hover {
+            background: #f0f2f5;
+        }
+        .sidebar {
+            width: 200px;
+            background: #ffffff;
+            padding: 28px 14px;
+            border-right: 1px solid #e2e8f0;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow-y: auto;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+        .sidebar h2 {
+            color: #718096;
+            font-weight: 500;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #edf2f7;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+        }
+        .sidebar a {
+            display: block;
+            color: #4a5568;
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.88rem;
+            margin-bottom: 4px;
+            transition: all 0.15s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+        .sidebar a:hover:not(.locked) {
+            background: #edf2f7;
+            color: #1a202c;
+        }
+        .sidebar a.active {
+            background: #ebf8ff;
+            color: #2b6cb0;
+            border-left-color: #3182ce;
+            font-weight: 600;
+        }
+        .sidebar a.locked {
+            color: #a0aec0;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .sidebar a.locked:hover {
+            background: none;
+            color: #a0aec0;
+        }
+        .sidebar a.locked::after {
+            content: ' 🔒';
+            font-size: 0.7rem;
+        }
+        .sidebar .back-btn {
+            margin-top: auto;
+            border-top: 1px solid #edf2f7;
+            padding-top: 16px;
+            color: #718096;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+        }
+        .sidebar .back-btn:hover {
+            color: #2b6cb0;
+            background: #f7fafc;
+        }
+        .main {
+            flex: 1;
+            padding: 32px 36px 50px;
+            max-width: 920px;
+            margin: 0 auto;
+            background: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.03);
+        }
+        .page {
+            display: block;
+            animation: fade 0.25s ease;
+        }
+        .page.hidden {
+            display: none;
+        }
+        @keyframes fade {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #1a202c;
+            border-left: 4px solid #3182ce;
+            padding-left: 16px;
+            margin-bottom: 22px;
+        }
+        .desc {
+            color: #4a5568;
+            background: #f7fafc;
+            padding: 14px 20px;
+            border-radius: 8px;
+            margin-bottom: 22px;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #4a5568;
+        }
+        .home-title {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+        .home-title h1 {
+            font-size: 3.2rem;
+            border-left: none;
+            padding-left: 0;
+            letter-spacing: 8px;
+            color: #2d3748;
+        }
+        .home-title .sub {
+            color: #718096;
+            font-size: 0.95rem;
+            letter-spacing: 6px;
+            margin-top: 12px;
+        }
+        .home-title .divider {
+            width: 60px;
+            height: 2px;
+            background: #cbd5e0;
+            margin: 20px auto;
+        }
+        .home-start {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .home-start .btn {
+            font-size: 1.2rem;
+            padding: 14px 50px;
+            letter-spacing: 3px;
+        }
+        .btn {
+            background: #3182ce;
+            border: none;
+            color: #ffffff;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .btn:hover:not(:disabled) {
+            background: #2b6cb0;
+        }
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        .btn-primary {
+            background: #3182ce;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: #2b6cb0;
+        }
+        .btn-success {
+            background: #2f855a;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #276749;
+        }
+        .input-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 16px;
+            align-items: center;
+            background: #f7fafc;
+            padding: 18px 22px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin: 12px 0 16px;
+        }
+        .input-area label {
+            color: #4a5568;
+            font-weight: 500;
+            min-width: 60px;
+        }
+        .input-area input {
+            flex: 1 1 160px;
+            background: #ffffff;
+            border: 1px solid #cbd5e0;
+            color: #2d3748;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .input-area input:focus {
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+        }
+        .input-area input::placeholder {
+            color: #a0aec0;
+        }
+        .input-area .hint {
+            color: #718096;
+            font-size: 0.85rem;
+            margin-left: 4px;
+        }
+        .identity-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin: 8px 0 12px;
+        }
+        .identity-badge.good {
+            background: #ebf8ff;
+            color: #2b6cb0;
+            border: 1px solid #bee3f8;
+        }
+        .identity-badge.bad {
+            background: #fff5f5;
+            color: #c53030;
+            border: 1px solid #fed7d7;
+        }
+        .identity-badge.accomplice {
+            background: #fffff0;
+            color: #b7791f;
+            border: 1px solid #fefcbf;
+        }
+        .script-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 20px 24px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+            color: #2d3748;
+            line-height: 1.8;
+            margin: 10px 0 20px;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+        .error-msg {
+            color: #e53e3e;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+        .scene-container {
+            position: relative;
+            background: #edf2f7;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0 24px;
+            border: 1px solid #cbd5e0;
+        }
+        .scene {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 30% 70%, #edf2f7, #cbd5e0);
+            min-height: 280px;
+        }
+        .body-figure {
+            position: absolute;
+            bottom: 10%;
+            left: 35%;
+            width: 22%;
+            aspect-ratio: 1 / 1.2;
+            background: #a0aec0;
+            border-radius: 40% 40% 10% 10% / 60% 60% 20% 20%;
+            transform: rotate(12deg);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .body-figure::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            width: 30%;
+            height: 30%;
+            background: #cbd5e0;
+            border-radius: 50%;
+            box-shadow: 0 0 0 6px #718096;
+        }
+        .body-figure::after {
+            content: '✕';
+            position: absolute;
+            top: 6%;
+            left: 48%;
+            font-size: 1.6rem;
+            color: #e53e3e;
+            transform: translateX(-50%);
+            opacity: 0.5;
+        }
+        .blood-smear {
+            position: absolute;
+            bottom: 22%;
+            left: 48%;
+            width: 6%;
+            height: 4%;
+            background: #e53e3e;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0.3;
+        }
+        .hotspot {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #3182ce;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3182ce;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            user-select: none;
+        }
+        .hotspot:hover:not(.revealed) {
+            background: #3182ce;
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+        .hotspot.revealed {
+            background: #e2e8f0;
+            border-color: #a0aec0;
+            color: #718096;
+            cursor: default;
+        }
+        .clue-panel {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 18px 24px;
+            margin-top: 16px;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #3182ce;
+            min-height: 70px;
+        }
+        .clue-panel strong {
+            color: #2b6cb0;
+        }
+        .lock-area {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 30px 24px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            margin: 16px 0;
+        }
+        .lock-area input {
+            background: #ffffff;
+            border: 2px solid #cbd5e0;
+            color: #2d3748;
+            padding: 12px 20px;
+            font-size: 1.6rem;
+            letter-spacing: 8px;
+            border-radius: 8px;
+            width: 180px;
+            text-align: center;
+            outline: none;
+            font-family: monospace;
+        }
+        .lock-area input:focus {
+            border-color: #3182ce;
+        }
+        .clue-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 16px 0 20px;
+        }
+        .clue-btn {
+            background: #ffffff;
+            border: 1px solid #cbd5e0;
+            color: #4a5568;
+            padding: 14px 8px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+            font-weight: 500;
+        }
+        .clue-btn:hover:not(.revealed) {
+            background: #ebf8ff;
+            border-color: #3182ce;
+            color: #2b6cb0;
+        }
+        .clue-btn.revealed {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+            color: #a0aec0;
+            cursor: default;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #edf2f7;
+            text-align: center;
+            color: #a0aec0;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+        }
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 999;
+                transform: translateX(-110%);
+                width: 220px;
+                height: 100vh;
+                box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            }
+            .sidebar.open { transform: translateX(0); }
+            .main { padding: 60px 16px 30px; }
+            h1 { font-size: 1.3rem; padding-left: 12px; }
+            .home-title h1 { font-size: 2rem; }
+            .input-area { flex-direction: column; align-items: stretch; }
+            .lock-area input { width: 150px; font-size: 1.3rem; }
+            .home-start .btn { font-size: 1.1rem; padding: 12px 36px; }
+            .clue-grid { grid-template-columns: repeat(2, 1fr); }
+            .hotspot { width: 28px; height: 28px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 汉堡菜单 -->
+    <button class="menu-toggle" id="menuToggle">☰</button>
+
+    <!-- 左侧目录 -->
+    <div class="sidebar" id="sidebar">
+        <h2>📁 目录</h2>
+        <a class="active" data-page="page-home">🏠 首页</a>
+        <a data-page="page-role" id="navRole">🎭 1. 你的角色名字</a>
+        <a data-page="page-studentid" id="navStudentId" class="locked">🔑 2. 你的学号</a>
+        <a data-page="page-clue1" id="navClue1" class="locked">🔍 3. 第一轮线索</a>
+        <a data-page="page-lock" id="navLock" class="locked">🔐 4. 第二轮密码</a>
+        <a data-page="page-clue2" id="navClue2" class="locked">📂 5. 第二轮线索</a>
+        <div class="back-btn" id="backBtn">← 返回首页</div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main" id="mainContent">
+
+        <!-- 首页 -->
+        <div class="page" id="page-home">
+            <div class="home-title">
+                <h1>剧本杀</h1>
+                <div class="divider"></div>
+                <h1 style="font-size:2.8rem; border-left:none; padding-left:0;">援助金</h1>
+                <div class="sub">— 校园推理 · 悬疑案件 —</div>
+            </div>
+            <div class="home-start">
+                <button class="btn btn-primary" id="startBtn">▶ 开始游戏</button>
+            </div>
+        </div>
+
+        <!-- 1. 你的角色名字 -->
+        <div class="page hidden" id="page-role">
+            <h1>🎭 1. 你的角色名字</h1>
+            <div class="desc">输入你的角色名（如：张三、李四），进行身份匹配。</div>
+            <div class="input-area">
+                <label for="roleInput">👤 角色名：</label>
+                <input type="text" id="roleInput" placeholder="请输入你的角色">
+                <button class="btn btn-primary" id="confirmRoleBtn">确认身份</button>
+            </div>
+            <div id="roleError" class="error-msg"></div>
+            <div id="identityDisplay"></div>
+            <div class="script-box" id="scriptPreview">等待确认角色身份...</div>
+        </div>
+
+        <!-- 2. 你的学号 -->
+        <div class="page hidden" id="page-studentid">
+            <h1>🔑 2. 你的学号</h1>
+            <div class="desc">输入你的学号（4位数字），解锁阵营信息与完整剧本。</div>
+            <div class="input-area">
+                <label for="studentIdInput">🔑 学号：</label>
+                <input type="password" id="studentIdInput" placeholder="请输入学号" maxlength="4">
+                <button class="btn btn-success" id="confirmIdBtn">查看剧本</button>
+                <span class="hint">学号在角色卡背面</span>
+            </div>
+            <div id="idError" class="error-msg"></div>
+            <div id="fullIdentityDisplay"></div>
+            <div class="script-box" id="scriptFull">请先在第1步确认角色身份，然后输入正确的学号解锁角色资料与阵营。</div>
+        </div>
+
+        <!-- 3. 第一轮线索 -->
+        <div class="page hidden" id="page-clue1">
+            <h1>🔍 3. 第一轮线索</h1>
+            <div class="desc">点击场景中的数字标记，获取线索。</div>
+            <div class="scene-container">
+                <div class="scene">
+                    <div class="body-figure"></div>
+                    <div class="blood-smear"></div>
+                    <div class="hotspot" style="top:12%; left:18%;" data-clue="A1">1</div>
+                    <div class="hotspot" style="top:8%; right:22%;" data-clue="A2">2</div>
+                    <div class="hotspot" style="bottom:28%; left:8%;" data-clue="A3">3</div>
+                    <div class="hotspot" style="bottom:18%; right:10%;" data-clue="A4">4</div>
+                    <div class="hotspot" style="top:45%; left:55%;" data-clue="A5">5</div>
+                    <div class="hotspot" style="top:70%; right:25%;" data-clue="A6">6</div>
+                </div>
+            </div>
+            <div class="clue-panel" id="clue1Panel">
+                <strong>📌 线索区</strong><br>
+                <span style="color:#a0aec0;">点击场景中的数字获取线索</span>
+            </div>
+        </div>
+
+        <!-- 4. 第二轮密码 -->
+        <div class="page hidden" id="page-lock">
+            <h1>🔐 4. 第二轮密码</h1>
+            <div class="desc">输入四位数字密码（0610），解锁第二轮线索。</div>
+            <div class="lock-area">
+                <input type="password" id="lockInput" maxlength="4" placeholder="· · · ·">
+                <br><br>
+                <button class="btn btn-primary" id="unlockBtn">解锁</button>
+                <div id="lockError" class="error-msg" style="margin-top:12px;"></div>
+            </div>
+        </div>
+
+        <!-- 5. 第二轮线索 -->
+        <div class="page hidden" id="page-clue2">
+            <h1>📂 5. 第二轮线索</h1>
+            <div class="desc">点击编号查看对应线索内容。</div>
+            <div class="clue-grid">
+                <div class="clue-btn" data-clue="B1">B1</div>
+                <div class="clue-btn" data-clue="B2">B2</div>
+                <div class="clue-btn" data-clue="B3">B3</div>
+                <div class="clue-btn" data-clue="B4">B4</div>
+                <div class="clue-btn" data-clue="B5">B5</div>
+                <div class="clue-btn" data-clue="B6">B6</div>
+            </div>
+            <div class="clue-panel" id="clue2Panel">
+                <strong>📌 线索区</strong><br>
+                <span style="color:#a0aec0;">点击上方编号查看线索详情</span>
+            </div>
+        </div>
+
+        <div class="footer">主办：kjiaaaaa</div>
+    </div>
+
+    <script>
+        var roleData = {
+            '张三': {
+                title: '班级委员',
+                studentId: '1457',
+                identity: '好人',
+                identityClass: 'good',
+                script: '你的公开身份：平时负责班级事务。性格认真。和林予安认识，但不算特别亲近。\n\n你的秘密：两周前，老师让你帮忙整理过学生资料。你发现援助金名单似乎有一处错误。你当时没有仔细追查。后来这件事情就不了了之。\n\n你知道：林予安最近似乎一直在调查什么。他曾经问过你："如果学校的记录是错的，你会不会告诉老师？"你当时回答："当然会。"但实际上你没有那么确定。\n\n你的目标：\n1. 找出谁杀了林予安。\n2. 弄清楚援助金到底发生了什么。\n3. 不要让别人误以为你参与了偷钱。'
+            },
+            '李四': {
+                title: '体育生',
+                studentId: '1776',
+                identity: '好人',
+                identityClass: 'good',
+                script: '你的公开身份：性格直接。和林予安曾经发生过争吵。\n\n你的秘密：案发当天晚上，你确实回过旧教学楼。你去拿落下的东西。你不想承认，因为你害怕自己成为嫌疑人。\n\n你知道：你大约20:15经过三楼。当时最后一间教室里有人说话。但你没有进去。\n\n你的目标：\n1. 找出凶手。\n2. 证明自己没有进入案发教室。'
+            },
+            '小温': {
+                title: '学生会成员',
+                studentId: '7654',
+                identity: '好人',
+                identityClass: 'good',
+                script: '你的公开身份：对学校事务比较熟悉。\n\n你的秘密：你知道学校最近有一笔援助金出现问题。你曾经听老师讨论过："有一份申请资料不太对。"你没有告诉其他同学。\n\n你知道：林予安曾经问过你："学生会有没有人能看到援助金的资料？"你回答没有。但实际上，你知道谁有权限。\n\n你的目标：\n1. 查清楚援助金被谁动过。'
+            },
+            '李华': {
+                title: '成绩优秀的学生',
+                studentId: '9825',
+                identity: '帮凶',
+                identityClass: 'accomplice',
+                script: '【帮凶】\n\n你的公开身份：你的成绩很好，是老师眼中的可靠学生。\n\n你的秘密：你知道吕伟曾经修改过援助金资料。你曾经发现过一次，但没有举报。你只是帮忙把一份有问题的资料重新放回原处。你以为事情就这样结束了。\n\n案发当天：20:45左右，你发现吕伟神色非常慌张。你后来意识到林予安可能已经出事。你没有报警。你还帮助吕伟藏起了一件关键证物。\n\n你的任务：\n- 你必须尽量阻止玩家发现：1. 你知道吕伟的事情。2. 你案发后见过吕伟。3. 你藏过证物。\n- 但是：你不能直接说"谁是凶手"。\n- 如果最后玩家问你是否帮助过凶手，你可以选择承认。\n\n---\n【帮凶完整背景】\n李华不是杀人凶手。\n李华之前知道援助金资料存在问题。\n他曾经因为害怕惹麻烦，帮吕伟隐瞒过一次资料上的错误。\n案发后李华发现吕伟是凶手。\n李华本来可以报警。\n但他害怕自己之前的行为也被调查，所以选择沉默，并把凶手留下的一件关键证物藏了起来。\n李华的行为是错误的。\n但他不是杀人者。'
+            },
+            '吕忠': {
+                title: '普通学生',
+                studentId: '1567',
+                identity: '好人',
+                identityClass: 'good',
+                script: '你的公开身份：和林予安关系比较好。\n\n你的秘密：林予安前一天曾经告诉你："我已经找到那个人了。"你不知道他说的是谁。你劝他把事情交给老师。他却说："我想再确认一次。"\n\n你知道：林予安最近一直在整理一些纸张。但他没有告诉你具体内容。\n\n你的目标：\n1. 找出林予安真正调查的事情。'
+            },
+            '陈楚': {
+                title: '转学生',
+                studentId: '1743',
+                identity: '好人',
+                identityClass: 'good',
+                script: '你的公开身份：刚转来学校不久。和其他人关系一般。\n\n你的秘密：案发当天18:50左右，你去过办公室。你无意中看到一份援助金资料。上面有一处明显的修改痕迹。\n\n你记得：那张纸上有一个非常重要的名字缩写：吕。但你不确定是不是他本人修改的。\n\n你的目标：\n1. 找到更多证据。'
+            },
+            '方康': {
+                title: '社团成员',
+                studentId: '9676',
+                identity: '好人',
+                identityClass: 'good',
+                script: '你的公开身份：参加学校社团。\n\n你的秘密：你曾经借过旧教学楼的钥匙。因为社团需要拿东西。\n\n你知道：钥匙在19:30左右已经归还。因此你知道："有钥匙"并不能证明一个人就是凶手。\n\n你的目标：\n1. 证明自己没有进入案发教室。'
+            },
+            '林舒静': {
+                title: '被死者约见的人',
+                studentId: '1678',
+                identity: '好人',
+                identityClass: 'good',
+                script: '【好人】\n\n你的公开身份：林予安案发当晚见过的人。\n\n你的秘密：晚上20:00，你确实去见了林予安。他问你："你是不是知道援助金的事情？"你没有回答。因为你知道一些事情，而且害怕自己也被牵连。你们发生争执。\n\n最重要的信息：你在20:25左右离开。离开时：林予安还活着。\n\n你的目标：\n1. 你需要找到真正的凶手。\n2. 决定什么时候告诉大家你和林予安见过面。'
+            },
+            '吕伟': {
+                title: '安静的学生',
+                studentId: '9976',
+                identity: '凶手',
+                identityClass: 'bad',
+                script: '【凶手】\n\n你的公开身份：平时存在感很低。看起来与案件关系不大。\n\n你的秘密：你就是援助金资料被伪造的主要参与者。你修改了部分资料，让5000元援助金被错误转出。林予安发现了。\n\n案发当天：你在20:31进入教室。林予安已经知道你与援助金有关。你要求他交出证据。他拒绝。之后发生冲突。林予安死亡。你离开。\n\n之后：李华发现了你的秘密。李华没有报警。你和李华共同隐瞒了一部分事情。\n\n你的任务：\n1. 不要承认自己进入过教室。\n2. 尽量让林舒静成为主要嫌疑人。\n3. 不要主动攻击李华。\n4. 如果玩家找到足够证据指向你，可以承认援助金问题，但不要主动承认命案。\n\n---\n【凶手完整背景】\n吕伟是最开始伪造援助金申请资料的人之一。\n吕伟修改了部分申请资料，并利用自己能够接触相关资料的机会，让5000元援助金被错误地转出。\n吕伟原本只是想拿到这笔钱。\n林予安后来发现了异常，并开始调查。\n当林予安准备公开证据时，吕伟慌了。\n吕伟进入旧教学楼，要求林予安把证据交出来。\n林予安拒绝。\n争执中发生命案。\n吕伟没有提前策划一个复杂的杀人计划。\n因此案件现场留下了不少可以追查的痕迹。'
+            }
+        };
+
+        var clueData = {
+            'A1': '📱 聊天记录\n林予安："晚上八点，旧教学楼三楼最后一间教室。"\n"你一个人来。"\n"我有东西给你看。"\n这条消息来自林舒静。',
+            'A2': '📋 走廊记录\n20:05：林舒静进入三楼。\n20:25：林舒静离开三楼。',
+            'A3': '📄 援助金通知\n学校最近确实有一笔学生援助金。\n其中5000元出现异常。',
+            'A4': '🔑 旧教学楼钥匙登记\n方康曾经借过钥匙。\n但19:30已经归还。',
+            'A5': '📓 林予安的笔记\n只有一句：\n"钱不是自己消失的。"',
+            'A6': '👤 目击信息\n李四曾经在20:15左右经过三楼。\n他听见最后一间教室有人说话。',
+            'B1': '📄 撕碎的申请表\n学生援助金申请资料\n编号：0417\n金额：5000元\n下方有修改痕迹。',
+            'B2': '📁 办公室记录\n资料最后一次被查看：18:42\n查看权限属于：吕伟',
+            'B3': '📱 林予安的手机\n最后一条未发送信息：\n"如果你真的参与了，就不要再骗我。"\n没有收件人。',
+            'B4': '🎥 走廊监控\n20:25：林舒静离开。\n20:31：吕伟进入。\n20:39：吕伟离开。',
+            'B5': '📝 证人记录\n有人看到李华在20:45左右进入旧教学楼附近。',
+            'B6': '📄 死者的纸条\n"我已经知道钱是谁拿的。"\n"但我还不知道他为什么这么做。"'
+        };
+
+        var pages = {
+            'page-home': document.getElementById('page-home'),
+            'page-role': document.getElementById('page-role'),
+            'page-studentid': document.getElementById('page-studentid'),
+            'page-clue1': document.getElementById('page-clue1'),
+            'page-lock': document.getElementById('page-lock'),
+            'page-clue2': document.getElementById('page-clue2')
+        };
+
+        var sidebarLinks = document.querySelectorAll('.sidebar a');
+        var menuToggle = document.getElementById('menuToggle');
+        var sidebar = document.getElementById('sidebar');
+        var currentRoleKey = null;
+
+        function showPage(pageId) {
+            var targetNav = document.querySelector(`.sidebar a[data-page="${pageId}"]`);
+            if (targetNav && targetNav.classList.contains('locked')) {
+                return;
+            }
+
+            for (var id in pages) {
+                if (pages.hasOwnProperty(id)) {
+                    pages[id].classList.add('hidden');
+                }
+            }
+            pages[pageId].classList.remove('hidden');
+
+            sidebarLinks.forEach(function(link) {
+                if (link.getAttribute('data-page') === pageId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+            }
+        }
+
+        function unlockNav(navId) {
+            var navElem = document.getElementById(navId);
+            if (navElem) {
+                navElem.classList.remove('locked');
+            }
+        }
+
+        sidebarLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+                var targetPage = this.getAttribute('data-page');
+                showPage(targetPage);
+            });
+        });
+
+        document.getElementById('startBtn').addEventListener('click', function() {
+            showPage('page-role');
+        });
+
+        document.getElementById('backBtn').addEventListener('click', function() {
+            showPage('page-home');
+        });
+
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+        });
+
+        // 1. 确认角色：只确认匹配成功，不展示阵营与任何资料
+        document.getElementById('confirmRoleBtn').addEventListener('click', function() {
+            var inputName = document.getElementById('roleInput').value.trim();
+            var errorDiv = document.getElementById('roleError');
+            var identityDiv = document.getElementById('identityDisplay');
+            var scriptPreview = document.getElementById('scriptPreview');
+
+            if (roleData[inputName]) {
+                currentRoleKey = inputName;
+
+                errorDiv.textContent = '';
+                identityDiv.innerHTML = '';
+
+                scriptPreview.textContent =
+                    '✅ 身份匹配成功。\n\n' +
+                    '🔒 阵营与角色资料已完全锁定\n' +
+                    '请前往「2. 你的学号」输入正确学号后查看阵营及完整角色资料。';
+
+                // 解锁第2步与第一轮线索
+                unlockNav('navStudentId');
+                unlockNav('navClue1');
+
+            } else {
+                currentRoleKey = null;
+                errorDiv.textContent = '未找到该角色，请检查输入名字是否正确。';
+                identityDiv.innerHTML = '';
+                scriptPreview.textContent = '等待确认角色身份...';
+            }
+        });
+
+        // 2. 输入学号：显示阵营与完整剧本
+        document.getElementById('confirmIdBtn').addEventListener('click', function() {
+            var inputId = document.getElementById('studentIdInput').value.trim();
+            var idError = document.getElementById('idError');
+            var fullIdentityDiv = document.getElementById('fullIdentityDisplay');
+            var scriptFull = document.getElementById('scriptFull');
+
+            if (!currentRoleKey) {
+                idError.textContent = '请先在第1步确认角色名字！';
+                return;
+            }
+
+            var role = roleData[currentRoleKey];
+
+            if (inputId === role.studentId) {
+                idError.textContent = '';
+                fullIdentityDiv.innerHTML = `<span class="identity-badge ${role.identityClass}">阵营：${role.identity}</span>`;
+                scriptFull.textContent = role.script;
+                unlockNav('navLock');
+            } else {
+                idError.textContent = '学号与当前角色不匹配，请重新输入！';
+            }
+        });
+
+        // 3. 第一轮线索点击
+        document.querySelectorAll('.hotspot').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var clueKey = this.getAttribute('data-clue');
+                var clueText = clueData[clueKey];
+                if (clueText) {
+                    document.getElementById('clue1Panel').innerHTML = `<strong>📌 线索 [${clueKey}]：</strong><br>${clueText.replace(/\n/g, '<br>')}`;
+                    this.classList.add('revealed');
+                }
+            });
+        });
+
+        // 4. 第二轮密码
+        document.getElementById('unlockBtn').addEventListener('click', function() {
+            var pwd = document.getElementById('lockInput').value.trim();
+            var lockError = document.getElementById('lockError');
+
+            if (pwd === '0610') {
+                lockError.style.color = '#2f855a';
+                lockError.textContent = '密码正确！第二轮线索已解锁。';
+                unlockNav('navClue2');
+                setTimeout(function() {
+                    showPage('page-clue2');
+                }, 800);
+            } else {
+                lockError.style.color = '#e53e3e';
+                lockError.textContent = '密码错误，请重新输入！';
+            }
+        });
+
+        // 5. 第二轮线索点击
+        document.querySelectorAll('.clue-btn').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var clueKey = this.getAttribute('data-clue');
+                var clueText = clueData[clueKey];
+                if (clueText) {
+                    document.getElementById('clue2Panel').innerHTML = `<strong>📌 线索 [${clueKey}]：</strong><br>${clueText.replace(/\n/g, '<br>')}`;
+                    this.classList.add('revealed');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
